@@ -6,7 +6,7 @@
  */
 import request from '@/utils/request'
 
-const api_name = '/eduservice/index-front'
+const api_name = '/eduservice/teacher-front'
 export default {
   getPageList(page, limit) {
     return request({
