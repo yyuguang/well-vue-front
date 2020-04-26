@@ -40,8 +40,11 @@
                     <a class="c-fff vam" title="收藏" href="#">收藏</a>
                 </span>
             </section>
-            <section class="c-attr-mt">
-              <a href="#" title="立即观看" class="comm-btn c-btn-3">立即观看</a>
+            <section v-if="isBuy || Number(course.price)===0" class="c-attr-mt">
+              <a href="#" title="开始学习" class="comm-btn c-btn-3" >开始学习</a>
+            </section>
+            <section v-else class="c-attr-mt">
+              <a href="#" title="立即购买" class="comm-btn c-btn-3" @click="createOrders()">立即购买</a>
             </section>
           </section>
         </aside>
@@ -178,15 +181,49 @@
 
 <script>
   import course from "@/api/course"
+  import order from "@/api/order"
+  import cookie from "js-cookie";
 
   export default {
-    asyncData({params, error}) {
-      return course.getCourseInfoById(params.id).then(response => {
-        return {
-          course: response.data.data.course,
-          chapterList: response.data.data.chapterVoList,
+    asyncData({ params, error }) {
+      return {courseId: params.id}
+    },
+    data() {
+      return {
+        course: {},
+        chapterList: [],
+        isBuy: false,
+      }
+    },
+    created() {
+      this.initCourseInfo()
+    },
+    methods: {
+      initCourseInfo() {
+        course.getCourseInfoById(this.courseId)
+          .then(response => {
+            this.course=response.data.data.course,
+              this.chapterList=response.data.data.chapterVoList,
+              this.isBuy=response.data.data.isBuy
+          })
+      },
+      createOrders() {
+        var jsonStr = cookie.get("well_ucenter");
+        if (jsonStr === undefined || jsonStr === '' || jsonStr === null) {
+          this.$message({
+            type: 'error',
+            message: "您还未登录，请先登录"
+          })
+          this.$router.push({path: '/login'})
+          return;
         }
-      })
+        order.createOrder(this.courseId).then(response => {
+          if (response.data.success) {
+            this.$router.push({path: '/order/' + response.data.data.orderId})
+          }
+        })
+
+      }
     }
   }
 </script>
